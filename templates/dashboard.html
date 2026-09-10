@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartStore Dashboard</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: #0f0f0f; color: #e0e0e0; }
+
+    .header {
+      background: #1a1a2e; padding: 16px 24px;
+      display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 1px solid #2a2a4a;
+    }
+    .header h1 { font-size: 20px; color: #fff; }
+    .status { font-size: 13px; padding: 4px 12px; border-radius: 20px;
+              background: #0d3b2e; color: #4ade80; border: 1px solid #4ade80; }
+
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 20px; }
+    .card { background: #1a1a2e; border-radius: 12px; padding: 16px;
+            border: 1px solid #2a2a4a; }
+    .card h2 { font-size: 14px; color: #9ca3af; margin-bottom: 12px;
+               text-transform: uppercase; letter-spacing: 0.05em; }
+
+    /* Customer */
+    .customer-info { display: flex; align-items: center; gap: 12px; }
+    .avatar { width: 44px; height: 44px; border-radius: 50%;
+              background: #2e4a7a; display: flex; align-items: center;
+              justify-content: center; font-size: 18px; font-weight: bold; color: #60a5fa; }
+    .customer-name { font-size: 16px; font-weight: bold; color: #fff; }
+    .customer-time { font-size: 12px; color: #9ca3af; margin-top: 2px; }
+    .no-customer { color: #6b7280; font-size: 14px; }
+
+    /* Basket */
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { text-align: left; color: #9ca3af; padding: 6px 0; border-bottom: 1px solid #2a2a4a; }
+    td { padding: 8px 0; border-bottom: 1px solid #1f1f3a; color: #e0e0e0; }
+    .total-row { display: flex; justify-content: space-between; margin-top: 12px;
+                 padding-top: 12px; border-top: 1px solid #2a2a4a; }
+    .total-label { font-size: 14px; font-weight: bold; color: #fff; }
+    .total-amount { font-size: 22px; font-weight: bold; color: #4ade80; }
+
+    /* Inventory */
+    .inv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .inv-item { background: #111827; border-radius: 8px; padding: 10px;
+                border: 1px solid #1f2937; }
+    .inv-name { font-size: 12px; font-weight: bold; color: #e0e0e0; }
+    .inv-stock { font-size: 18px; font-weight: bold; margin-top: 4px; }
+    .stock-ok   { color: #4ade80; }
+    .stock-low  { color: #f59e0b; }
+    .stock-empty{ color: #ef4444; }
+
+    /* Buttons */
+    .btn { padding: 10px 18px; border-radius: 8px; border: none;
+           cursor: pointer; font-size: 14px; font-weight: bold; }
+    .btn-checkout { background: #16a34a; color: #fff; width: 100%; margin-top: 12px; }
+    .btn-checkout:hover { background: #15803d; }
+    .btn-entry { background: #1d4ed8; color: #fff; padding: 8px 16px;
+                 border-radius: 8px; border: none; cursor: pointer; font-size: 13px; }
+
+    /* QR Modal */
+    .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+             background: rgba(0,0,0,0.8); align-items: center; justify-content: center; z-index: 10; }
+    .modal.show { display: flex; }
+    .modal-card { background: #1a1a2e; border-radius: 16px; padding: 28px;
+                  text-align: center; border: 1px solid #2a2a4a; min-width: 280px; }
+    .modal-card h3 { color: #fff; margin-bottom: 4px; }
+    .paynow { background: #8B1A4A; color: #fff; padding: 4px 14px;
+              border-radius: 20px; font-size: 12px; display: inline-block; margin: 8px 0; }
+    .qr-amount { font-size: 36px; font-weight: bold; color: #fff; margin: 8px 0 4px; }
+    .qr-ref { font-size: 12px; color: #9ca3af; margin-bottom: 12px; }
+    .qr-box { background: #fff; border-radius: 8px; padding: 12px;
+              display: inline-block; margin: 8px 0; }
+    .btn-confirm { background: #16a34a; color: #fff; width: 100%;
+                   padding: 12px; border-radius: 8px; border: none;
+                   cursor: pointer; font-size: 15px; font-weight: bold; margin-top: 8px; }
+    .btn-cancel { background: transparent; color: #9ca3af; width: 100%;
+                  padding: 10px; border-radius: 8px; border: 1px solid #374151;
+                  cursor: pointer; font-size: 13px; margin-top: 6px; }
+
+    /* Success */
+    .success-icon { width: 56px; height: 56px; border-radius: 50%;
+                    background: #0d3b2e; display: flex; align-items: center;
+                    justify-content: center; font-size: 24px; margin: 0 auto 12px; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🏪 SmartStore Dashboard</h1>
+  <div style="display:flex;align-items:center;gap:12px">
+    <button class="btn-entry" onclick="simulateEntry()">+ Simulate Customer Entry</button>
+    <span class="status">● System online</span>
+  </div>
+</div>
+
+<div class="grid">
+
+  <!-- Customer card -->
+  <div class="card">
+    <h2>Active Customer</h2>
+    <div id="customer-display">
+      <span class="no-customer">No active session — waiting for customer</span>
+    </div>
+  </div>
+
+  <!-- Basket card -->
+  <div class="card" style="grid-row: span 2;">
+    <h2>Live Basket</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th style="text-align:right">Qty</th>
+          <th style="text-align:right">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody id="basket-body">
+        <tr><td colspan="3" style="color:#6b7280;padding:16px 0">Basket is empty</td></tr>
+      </tbody>
+    </table>
+    <div id="totals" style="display:none">
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:#9ca3af;margin-top:8px">
+        <span>Subtotal</span><span id="subtotal">$0.00</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:#9ca3af;margin-top:4px">
+        <span>GST (9%)</span><span id="gst">$0.00</span>
+      </div>
+      <div class="total-row">
+        <span class="total-label">Total</span>
+        <span class="total-amount" id="total">$0.00</span>
+      </div>
+    </div>
+    <button class="btn btn-checkout" onclick="checkout()">Checkout with PayNow →</button>
+  </div>
+
+  <!-- Inventory card -->
+  <div class="card">
+    <h2>Live Inventory</h2>
+    <div class="inv-grid" id="inventory-grid">
+      <span style="color:#6b7280;font-size:13px">Loading...</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- QR Payment Modal -->
+<div class="modal" id="qr-modal">
+  <div class="modal-card">
+    <div id="qr-view">
+      <h3>SmartStore</h3>
+      <span class="paynow">PayNow</span>
+      <div class="qr-amount" id="qr-amount">$0.00</div>
+      <div class="qr-ref" id="qr-ref">Ref: —</div>
+      <div class="qr-box">
+        <svg width="140" height="140" viewBox="0 0 140 140">
+          <rect width="140" height="140" fill="white"/>
+          <g fill="#1a1a1a">
+            <rect x="8" y="8" width="44" height="44"/><rect x="12" y="12" width="36" height="36" fill="white"/><rect x="16" y="16" width="28" height="28"/>
+            <rect x="88" y="8" width="44" height="44"/><rect x="92" y="12" width="36" height="36" fill="white"/><rect x="96" y="16" width="28" height="28"/>
+            <rect x="8" y="88" width="44" height="44"/><rect x="12" y="92" width="36" height="36" fill="white"/><rect x="16" y="96" width="28" height="28"/>
+            <rect x="62" y="8" width="6" height="6"/><rect x="70" y="8" width="6" height="6"/><rect x="62" y="16" width="6" height="6"/>
+            <rect x="70" y="16" width="6" height="6"/><rect x="62" y="24" width="10" height="4"/><rect x="74" y="22" width="4" height="8"/>
+            <rect x="62" y="32" width="6" height="6"/><rect x="70" y="30" width="8" height="4"/><rect x="70" y="36" width="4" height="6"/>
+            <rect x="62" y="42" width="4" height="4"/><rect x="68" y="42" width="8" height="4"/><rect x="78" y="40" width="4" height="8"/>
+            <rect x="88" y="62" width="4" height="4"/><rect x="96" y="62" width="6" height="4"/><rect x="104" y="60" width="4" height="8"/>
+            <rect x="88" y="70" width="8" height="4"/><rect x="100" y="68" width="4" height="8"/><rect x="106" y="70" width="8" height="6"/>
+            <rect x="88" y="80" width="4" height="8"/><rect x="94" y="82" width="8" height="4"/><rect x="104" y="80" width="6" height="4"/>
+            <rect x="62" y="62" width="10" height="4"/><rect x="74" y="60" width="4" height="10"/><rect x="62" y="70" width="6" height="6"/>
+            <rect x="70" y="70" width="8" height="4"/><rect x="62" y="78" width="4" height="8"/><rect x="68" y="80" width="8" height="4"/>
+          </g>
+          <rect x="56" y="56" width="28" height="28" rx="4" fill="#8B1A4A"/>
+          <text x="70" y="75" text-anchor="middle" font-size="14" font-weight="700" fill="white" font-family="Arial">P</text>
+        </svg>
+      </div>
+      <div style="font-size:12px;color:#9ca3af;margin-bottom:8px">Scan with your banking app</div>
+      <button class="btn-confirm" onclick="confirmPayment()">✓ Confirm Payment</button>
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+    </div>
+    <div id="success-view" style="display:none">
+      <div class="success-icon">✅</div>
+      <h3 style="color:#4ade80;margin-bottom:8px">Payment Received!</h3>
+      <p style="color:#9ca3af;font-size:13px" id="success-msg"></p>
+      <button class="btn-confirm" style="margin-top:16px" onclick="closeModal()">Done</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentRef = null;
+let pollInterval = null;
+
+// ── Load inventory ──
+async function loadInventory() {
+  const res  = await fetch('/inventory');
+  const data = await res.json();
+  const grid = document.getElementById('inventory-grid');
+  grid.innerHTML = Object.entries(data).map(([key, val]) => {
+    const cls = val.stock === 0 ? 'stock-empty' : val.stock <= 3 ? 'stock-low' : 'stock-ok';
+    return `<div class="inv-item">
+      <div class="inv-name">${val.name}</div>
+      <div class="inv-stock ${cls}">${val.stock} <span style="font-size:11px;font-weight:normal;color:#9ca3af">units</span></div>
+      <div style="font-size:11px;color:#9ca3af">$${val.price.toFixed(2)}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── Load basket ──
+async function loadBasket() {
+  const res  = await fetch('/basket');
+  const data = await res.json();
+  const tbody = document.getElementById('basket-body');
+  const totals = document.getElementById('totals');
+
+  if (!data.items || data.items.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="3" style="color:#6b7280;padding:16px 0">Basket is empty</td></tr>';
+    totals.style.display = 'none';
+    return;
+  }
+
+  tbody.innerHTML = data.items.map(item =>
+    `<tr>
+      <td>${item.name}</td>
+      <td style="text-align:right">${item.qty}</td>
+      <td style="text-align:right">$${(item.price * item.qty).toFixed(2)}</td>
+    </tr>`
+  ).join('');
+
+  document.getElementById('subtotal').textContent = `$${data.subtotal.toFixed(2)}`;
+  document.getElementById('gst').textContent      = `$${data.gst.toFixed(2)}`;
+  document.getElementById('total').textContent    = `$${data.total.toFixed(2)}`;
+  totals.style.display = 'block';
+}
+
+// ── Load customer ──
+async function loadCustomer() {
+  const res  = await fetch('/customer/status');
+  const data = await res.json();
+  const div  = document.getElementById('customer-display');
+
+  if (data.active) {
+    const initials = data.name.split(' ').map(w => w[0]).join('').toUpperCase();
+    div.innerHTML = `
+      <div class="customer-info">
+        <div class="avatar">${initials}</div>
+        <div>
+          <div class="customer-name">${data.name}</div>
+          <div class="customer-time">Entered at ${data.entry_time}</div>
+        </div>
+      </div>`;
+  } else {
+    div.innerHTML = '<span class="no-customer">No active session — waiting for customer</span>';
+  }
+}
+
+// ── Simulate customer entry (temp — Pi will do this later) ──
+async function simulateEntry() {
+  const name  = prompt("Enter customer name:", "Ahmad Hassan");
+  if (!name) return;
+  const email = prompt("Enter customer email:", "ahmad@email.com");
+  if (!email) return;
+
+  await fetch('/customer/entry', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, email })
+  });
+  loadCustomer();
+  loadBasket();
+}
+
+// ── Checkout ──
+async function checkout() {
+  const res  = await fetch('/checkout', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({})
+  });
+  const data = await res.json();
+  if (data.error) { alert(data.error); return; }
+
+  currentRef = data.ref_id;
+  document.getElementById('qr-amount').textContent = `S$${data.total.toFixed(2)}`;
+  document.getElementById('qr-ref').textContent    = `Ref: SS-${data.ref_id}`;
+  document.getElementById('qr-view').style.display    = 'block';
+  document.getElementById('success-view').style.display = 'none';
+  document.getElementById('qr-modal').classList.add('show');
+}
+
+// ── Confirm payment ──
+async function confirmPayment() {
+  const res  = await fetch('/pay/confirm', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ref_id: currentRef })
+  });
+  const data = await res.json();
+
+  document.getElementById('qr-view').style.display     = 'none';
+  document.getElementById('success-view').style.display = 'block';
+  document.getElementById('success-msg').textContent   =
+    `Payment confirmed. ${data.email_sent ? 'Receipt sent to email.' : 'Receipt could not be sent (email not configured yet).'}`;
+
+  loadBasket();
+  loadCustomer();
+  loadInventory();
+}
+
+function closeModal() {
+  document.getElementById('qr-modal').classList.remove('show');
+  currentRef = null;
+}
+
+// ── Auto-refresh every 3 seconds ──
+function refresh() {
+  loadInventory();
+  loadBasket();
+  loadCustomer();
+}
+
+refresh();
+setInterval(refresh, 3000);
+</script>
+</body>
+</html>
