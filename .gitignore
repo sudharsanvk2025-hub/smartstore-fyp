@@ -1,0 +1,7 @@
+venv/
+__pycache__/
+smartstore.db
+
+*.onnx
+face_db/
+check_cam*.jpg

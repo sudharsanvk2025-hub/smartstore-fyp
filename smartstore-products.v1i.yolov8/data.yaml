@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 1
+names: ['webcam_box']
+
+roboflow:
+  workspace: sudharsan-vk
+  project: smartstore-products
+  version: 1
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/sudharsan-vk/smartstore-products/dataset/1

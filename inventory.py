@@ -10,6 +10,7 @@ inventory = {
     "pocky":         {"name": "Pocky",         "price": 2.80, "stock": 10},
     "dutch_lady":    {"name": "Dutch Lady",    "price": 2.10, "stock": 8},
     "100plus":       {"name": "100 Plus",      "price": 1.60, "stock": 10},
+    "webcam_box":    {"name": "Webcam Box",    "price": 5.00, "stock": 5},
 }
 
 def reduce_stock(name):

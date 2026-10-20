@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#14142b">
+<title>SmartStore</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    background: #0f0f1e; color: #e8e8f0; min-height: 100vh;
+    padding: 20px 16px 40px; max-width: 480px; margin: 0 auto;
+  }
+  h1 { font-size: 22px; display: flex; align-items: center; gap: 8px; margin-bottom: 18px; }
+  .card { background: #1b1b33; border: 1px solid #2a2a48; border-radius: 14px; padding: 18px; margin-bottom: 14px; }
+  .label { font-size: 12px; letter-spacing: 1px; text-transform: uppercase; color: #8b8bab; margin-bottom: 10px; font-weight: 600; }
+  .muted { color: #8b8bab; font-size: 14px; }
+  input {
+    width: 100%; padding: 13px 14px; margin-bottom: 12px; border-radius: 10px;
+    border: 1px solid #2f2f52; background: #12122a; color: #fff; font-size: 16px;
+  }
+  input:focus { outline: none; border-color: #3b6cf6; }
+  button {
+    width: 100%; padding: 14px; border: none; border-radius: 10px; font-size: 16px;
+    font-weight: 600; cursor: pointer; background: #2557e8; color: #fff;
+  }
+  button.secondary { background: transparent; border: 1px solid #2f2f52; color: #c8c8dc; margin-top: 8px; }
+  .tabs { display: flex; gap: 6px; margin-bottom: 16px; background: #12122a; padding: 4px; border-radius: 10px; }
+  .tabs button { background: transparent; color: #8b8bab; padding: 10px; }
+  .tabs button.on { background: #2557e8; color: #fff; }
+  .consent { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; color: #b5b5cc; margin: 4px 0 16px; line-height: 1.4; }
+  .consent input { width: 20px; height: 20px; margin: 0; flex-shrink: 0; }
+  .error { color: #ff7b7b; font-size: 14px; margin-bottom: 12px; min-height: 18px; }
+  .points { font-size: 40px; font-weight: 700; color: #4ade80; }
+  .status { display: flex; align-items: center; gap: 12px; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; background: #55557a; flex-shrink: 0; }
+  .dot.in { background: #4ade80; box-shadow: 0 0 0 4px rgba(74,222,128,.2); }
+  .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #2a2a48; font-size: 15px; }
+  .row:last-child { border-bottom: none; }
+  .total { font-weight: 700; font-size: 17px; }
+  .warn { background: #3a2c10; border-color: #6b5016; color: #ffd27a; font-size: 14px; }
+  .hidden { display: none; }
+  .bar { height: 8px; background: #12122a; border-radius: 4px; overflow: hidden; margin-bottom: 14px; }
+  .bar div { height: 100%; width: 0; background: #4ade80; transition: width .4s; }
+  .ok { color: #4ade80; font-weight: 600; }
+  .receipt { background: #12301f; border-color: #1f6b3f; }
+  .receipt.unpaid { background: #3a1616; border-color: #7a2a2a; }
+  .big { font-size: 30px; font-weight: 700; margin: 4px 0 6px; }
+  .amounts { display: flex; gap: 8px; margin-top: 12px; }
+  .amounts button { padding: 12px 0; background: #22224a; border: 1px solid #2f2f52; }
+  .paynow { text-align: center; padding: 6px 0 2px; }
+  .paynow .qr { width: 150px; height: 150px; margin: 10px auto; background:
+      repeating-conic-gradient(#fff 0 25%, #111 0 50%) 0 0/20px 20px; border: 8px solid #fff; border-radius: 6px; }
+  button.leave { background: #b4233a; margin-top: 14px; }
+  .bad { color: #ff7b7b; }
+  .top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+  .top h1 { margin: 0; }
+  .link { background: none; width: auto; padding: 6px 0; color: #8b8bab; font-size: 14px; font-weight: 500; }
+</style>
+</head>
+<body>
+
+<!-- ─── Log in / Sign up ─── -->
+<div id="auth">
+  <h1>🛒 SmartStore</h1>
+  <div class="card">
+    <div class="tabs">
+      <button id="tabLogin" class="on" onclick="showTab('login')">Log in</button>
+      <button id="tabSignup" onclick="showTab('signup')">Sign up</button>
+    </div>
+
+    <div id="loginForm">
+      <input id="loginEmail" type="email" placeholder="Email" autocomplete="email">
+      <input id="loginPin" type="password" inputmode="numeric" placeholder="PIN">
+      <div class="error" id="loginError"></div>
+      <button onclick="login()">Log in</button>
+    </div>
+
+    <div id="signupForm" class="hidden">
+      <input id="suName" placeholder="Full name" autocomplete="name">
+      <input id="suEmail" type="email" placeholder="Email" autocomplete="email">
+      <input id="suPin" type="password" inputmode="numeric" placeholder="Choose a 4–6 digit PIN">
+      <label class="consent">
+        <input id="suConsent" type="checkbox">
+        <span>I agree to SmartStore storing photos of my face to check me in and out of the store.
+        My face photos stay on the store's device, and I can ask for them to be deleted at any time.</span>
+      </label>
+      <div class="error" id="signupError"></div>
+      <button onclick="signup()">Create account</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Home ─── -->
+<div id="home" class="hidden">
+  <div class="top">
+    <h1>Hi, <span id="name"></span></h1>
+    <button class="link" onclick="logout()">Log out</button>
+  </div>
+
+  <div class="card receipt hidden" id="receiptCard"></div>
+
+  <div class="card receipt unpaid hidden" id="unpaidCard">
+    <div class="label" style="color:#ffb3b3">Unpaid bill</div>
+    <div class="big" id="unpaidAmt">$0.00</div>
+    <div>Your wallet didn't have enough when you left. Top up below to pay it.
+      You can't check in again until it's paid.</div>
+  </div>
+
+  <div class="card" id="faceCard">
+    <div class="label">Face check-in</div>
+    <div id="faceText" style="margin-bottom:14px"></div>
+    <div class="bar hidden" id="faceBar"><div id="faceFill"></div></div>
+    <button id="faceBtn" onclick="registerFace()">Register my face</button>
+  </div>
+
+  <div class="card">
+    <div class="label">Store status</div>
+    <div class="status">
+      <div class="dot" id="dot"></div>
+      <div>
+        <div id="statusText" style="font-weight:600">Not in store</div>
+        <div class="muted" id="statusSub">Walk up to the entrance camera to check in</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card hidden" id="basketCard">
+    <div class="label">Your basket</div>
+    <div id="basketRows"></div>
+    <button class="leave" onclick="leave()">I'm leaving, check me out</button>
+    <div class="muted" style="margin-top:8px;font-size:13px">Or just walk out past the exit camera.
+      You'll be charged from your wallet automatically.</div>
+  </div>
+
+  <div class="card">
+    <div class="label">Wallet</div>
+    <div class="points" id="wallet" style="color:#fff">$0.00</div>
+    <div class="muted">Paid automatically when you leave the store</div>
+    <div id="topupArea">
+      <div class="amounts" id="amounts"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="label">Reward points</div>
+    <div class="points" id="points">0</div>
+    <div class="muted">You earn 1 point for every $1 spent</div>
+  </div>
+
+  <div class="card">
+    <div class="label">Past visits</div>
+    <div id="visits" class="muted">No visits yet</div>
+  </div>
+</div>
+
+<script>
+let pollTimer = null;
+
+function $(id) { return document.getElementById(id); }
+function money(n) { return "$" + Number(n || 0).toFixed(2); }
+
+function showTab(t) {
+  $("loginForm").classList.toggle("hidden", t !== "login");
+  $("signupForm").classList.toggle("hidden", t !== "signup");
+  $("tabLogin").classList.toggle("on", t === "login");
+  $("tabSignup").classList.toggle("on", t === "signup");
+}
+
+async function post(url, body) {
+  const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body || {}) });
+  return { ok: r.ok, data: await r.json() };
+}
+
+async function login() {
+  const r = await post("/api/login", { email: $("loginEmail").value, pin: $("loginPin").value });
+  if (!r.ok) { $("loginError").textContent = r.data.error; return; }
+  refresh();
+}
+
+async function signup() {
+  const r = await post("/api/signup", {
+    name: $("suName").value, email: $("suEmail").value,
+    pin: $("suPin").value, consent: $("suConsent").checked
+  });
+  if (!r.ok) { $("signupError").textContent = r.data.error; return; }
+  refresh();
+}
+
+async function logout() {
+  await post("/api/logout");
+  clearInterval(pollTimer); pollTimer = null;
+  $("home").classList.add("hidden");
+  $("auth").classList.remove("hidden");
+}
+
+async function registerFace() {
+  const r = await post("/api/face/register");
+  if (!r.ok) { $("faceText").innerHTML = `<span class="bad">${r.data.error}</span>`; return; }
+  refresh();
+}
+
+function renderFace(c, reg) {
+  const busy = reg && (reg.status === "waiting" || reg.status === "capturing");
+  const btn = $("faceBtn"), text = $("faceText");
+  $("faceBar").classList.toggle("hidden", !busy);
+  btn.disabled = busy;
+  btn.style.opacity = busy ? 0.5 : 1;
+
+  if (busy && reg.status === "waiting") {
+    text.textContent = "Connecting to the entrance camera...";
+    $("faceFill").style.width = "0%";
+  } else if (busy) {
+    text.innerHTML = `Look at the entrance camera and move your head slightly. <b>${reg.count}/${reg.total}</b>`
+      + (reg.hint ? `<div class="muted" style="margin-top:6px">Tip: ${reg.hint}</div>` : "");
+    $("faceFill").style.width = (100 * reg.count / reg.total) + "%";
+  } else if (reg && reg.status === "failed") {
+    text.innerHTML = `<span class="bad">${reg.message}</span>`;
+    btn.textContent = "Try again";
+  } else if (c.face_registered) {
+    text.innerHTML = '<span class="ok">Face registered ✓</span><div class="muted" style="margin-top:4px">Just walk in and you\'ll be checked in automatically.</div>';
+    btn.textContent = "Re-register my face";
+    btn.className = "secondary";
+  } else {
+    text.textContent = "Register your face once at the store entrance, then you'll be checked in automatically every visit.";
+    btn.textContent = "Register my face";
+    btn.className = "";
+  }
+}
+
+async function leave() {
+  const r = await post("/api/leave");
+  if (!r.ok) alert(r.data.error);
+  refresh();
+}
+
+let topupShown = false;
+function renderAmounts(list) {
+  if (topupShown) return;
+  $("amounts").innerHTML = list.map(a => `<button onclick="startTopup(${a})">+ $${a}</button>`).join("");
+}
+
+async function startTopup(amount) {
+  const r = await post("/api/topup", { amount });
+  if (!r.ok) return;
+  topupShown = true;
+  $("topupArea").innerHTML = `
+    <div class="paynow">
+      <div class="muted" style="margin-top:12px">PayNow (simulation)</div>
+      <div class="qr"></div>
+      <div class="big">${money(r.data.amount)}</div>
+      <div class="muted">Ref ${r.data.ref_id}</div>
+      <button style="margin-top:12px" onclick="confirmTopup('${r.data.ref_id}')">I've paid</button>
+      <button class="secondary" onclick="cancelTopup()">Cancel</button>
+    </div>`;
+}
+
+async function confirmTopup(ref) {
+  await post("/api/topup/confirm", { ref_id: ref });
+  cancelTopup();
+  refresh();
+}
+
+function cancelTopup() {
+  topupShown = false;
+  $("topupArea").innerHTML = '<div class="amounts" id="amounts"></div>';
+  refresh();
+}
+
+function renderReceipt(rc) {
+  const card = $("receiptCard");
+  card.classList.toggle("hidden", !rc);
+  if (!rc) return;
+  const how = { exit_camera: "Checked out by the exit camera", app_button: "Checked out from the app",
+                timeout: "Checked out automatically (no activity)", paynow: "Paid with PayNow" }[rc.reason] || "";
+  let body;
+  if (rc.status === "paid") {
+    body = `<div class="label" style="color:#9ff0bd">Thanks for shopping!</div>
+      <div class="big">${money(rc.total)}</div>
+      <div>Paid from your wallet · <span class="ok">+${rc.points} points</span></div>`;
+    rc.items.forEach(it => body += `<div class="row"><span>${itemName(it)} × ${itemQty(it)}</span><span>${money(itemSub(it))}</span></div>`);
+    body += `<div class="muted" style="margin-top:8px">${how}. Ref ${rc.ref_id}${rc.email_sent ? " · receipt emailed" : ""}</div>`;
+  } else if (rc.status === "nothing_bought") {
+    body = `<div class="label" style="color:#9ff0bd">See you next time!</div><div>You left without taking anything, so nothing was charged.</div>
+      <div class="muted" style="margin-top:8px">${how}</div>`;
+  } else {
+    card.classList.add("hidden");
+    return;
+  }
+  card.innerHTML = body;
+}
+
+// basket items may use slightly different key names, so check a few
+function itemName(it) { return it.name || it.product || it.item || "Item"; }
+function itemQty(it)  { return it.qty ?? it.quantity ?? 1; }
+function itemSub(it)  { return it.subtotal ?? it.line_total ?? it.total ?? (it.price || 0) * itemQty(it); }
+
+function render(me) {
+  $("auth").classList.add("hidden");
+  $("home").classList.remove("hidden");
+
+  const c = me.customer;
+  $("name").textContent = c.name.split(" ")[0];
+  $("points").textContent = c.points;
+  renderFace(c, me.face_reg);
+  $("wallet").textContent = money(c.wallet);
+  renderAmounts(me.top_up_amounts);
+  renderReceipt(me.receipt);
+  $("unpaidCard").classList.toggle("hidden", !(me.unpaid_total > 0));
+  $("unpaidAmt").textContent = money(me.unpaid_total);
+
+  $("dot").classList.toggle("in", me.in_store);
+  $("statusText").textContent = me.in_store ? "Checked in ✓" : "Not in store";
+  $("statusSub").textContent = me.in_store
+    ? "Since " + me.entry_time + ". Pick up items and they'll appear below."
+    : (me.unpaid_total > 0 ? "Pay your unpaid bill to check in again"
+       : c.wallet <= 0 ? "Top up your wallet, then walk up to the entrance camera"
+       : "Walk up to the entrance camera to check in");
+
+  $("basketCard").classList.toggle("hidden", !me.in_store);
+  if (me.in_store) {
+    const b = me.basket || {};
+    const items = b.items || [];
+    let html = items.length ? "" : '<div class="muted">Basket is empty</div>';
+    items.forEach(it => {
+      html += `<div class="row"><span>${itemName(it)} × ${itemQty(it)}</span><span>${money(itemSub(it))}</span></div>`;
+    });
+    if (items.length) {
+      html += `<div class="row muted"><span>GST</span><span>${money(b.gst)}</span></div>`;
+      html += `<div class="row total"><span>Total</span><span>${money(b.total)}</span></div>`;
+    }
+    $("basketRows").innerHTML = html;
+  }
+
+  if (me.visits.length) {
+    $("visits").innerHTML = me.visits.map(v =>
+      `<div class="row"><span>${v.entry_time.slice(0, 16)}</span><span>${money(v.total)} · ${v.paid ? "+" + v.points_earned + " pts" : '<span class="bad">unpaid</span>'}</span></div>`
+    ).join("");
+  } else {
+    $("visits").textContent = "No visits yet";
+  }
+}
+
+async function refresh() {
+  try {
+    const me = await (await fetch("/api/me")).json();
+    if (!me.logged_in) {
+      $("home").classList.add("hidden");
+      $("auth").classList.remove("hidden");
+      return;
+    }
+    render(me);
+    if (!pollTimer) pollTimer = setInterval(refresh, 2000);   // live updates every 2 s
+  } catch (e) { /* laptop briefly unreachable, try again next tick */ }
+}
+
+refresh();
+</script>
+</body>
+</html>
