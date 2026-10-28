@@ -86,6 +86,13 @@ def get_customer_by_email(email):
         return dict(row) if row else None
 
 
+def get_names():
+    """{customer id: name} for everyone with a registered face (used by the Pi for its logs)."""
+    with connect() as conn:
+        rows = conn.execute("SELECT id, name FROM customers WHERE face_registered = 1").fetchall()
+    return {r["id"]: r["name"] for r in rows}
+
+
 def set_face_registered(customer_id, value=True):
     with connect() as conn:
         conn.execute("UPDATE customers SET face_registered = ? WHERE id = ?", (int(value), customer_id))

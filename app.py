@@ -182,6 +182,10 @@ def customer_status():
 @app.route('/basket/add', methods=['POST'])
 def basket_add():
     name = request.json.get("name")
+    if not current_customer["active"]:
+        # nobody checked in (e.g. setting up the shelf): don't charge anyone
+        print(f"[BASKET] Ignored {name}: no customer in the store")
+        return jsonify({**get_summary(), "ignored": True})
     add_item(name)
     current_customer["last_activity"] = time.time()
     return jsonify(get_summary())
@@ -189,6 +193,8 @@ def basket_add():
 @app.route('/basket/remove', methods=['POST'])
 def basket_remove():
     name = request.json.get("name")
+    if not current_customer["active"]:
+        return jsonify({**get_summary(), "ignored": True})
     remove_item(name)
     current_customer["last_activity"] = time.time()
     return jsonify(get_summary())
@@ -435,6 +441,11 @@ def pi_task():
         set_reg(status="capturing")
         return jsonify({"task": "register", "customer_id": face_reg["customer_id"]})
     return jsonify({"task": None})
+
+@app.route('/pi/customers', methods=['GET'])
+def pi_customers():
+    """Pi asks: which name goes with which customer number?"""
+    return jsonify({str(k): v for k, v in db.get_names().items()})
 
 @app.route('/pi/register/progress', methods=['POST'])
 def pi_register_progress():

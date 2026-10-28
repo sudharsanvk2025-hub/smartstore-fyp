@@ -5,3 +5,10 @@ smartstore.db
 *.onnx
 face_db/
 check_cam*.jpg
+
+*.zip
+dataset/
+smartstore-products.v*i.yolov8/
+yolov8*.pt
+runs/**/last.pt
+shelf_zone.json

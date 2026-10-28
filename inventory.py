@@ -1,16 +1,13 @@
 # inventory.py
-# Edit product names and prices to match your actual demo products
+# Keys must match the YOLO class names exactly (Roboflow class names)
 
 inventory = {
-    "coke_can":      {"name": "Coke Can",      "price": 1.50, "stock": 10},
-    "milo_carton":   {"name": "Milo Carton",   "price": 1.80, "stock": 8},
-    "lays_chips":    {"name": "Lays Chips",    "price": 2.20, "stock": 12},
-    "mineral_water": {"name": "Mineral Water", "price": 0.90, "stock": 15},
-    "kelloggs":      {"name": "Kelloggs",      "price": 3.50, "stock": 6},
-    "pocky":         {"name": "Pocky",         "price": 2.80, "stock": 10},
-    "dutch_lady":    {"name": "Dutch Lady",    "price": 2.10, "stock": 8},
-    "100plus":       {"name": "100 Plus",      "price": 1.60, "stock": 10},
-    "webcam_box":    {"name": "Webcam Box",    "price": 5.00, "stock": 5},
+    "webcam_box":     {"name": "Webcam Box",                    "price": 5.00, "stock": 5},
+    "roller_coaster": {"name": "Roller Coaster BBQ",            "price": 1.20, "stock": 8},
+    "popo_murukku":   {"name": "Popo Fish Murukku",             "price": 1.50, "stock": 8},
+    "pocky":          {"name": "Pocky Cookies & Cream",         "price": 2.30, "stock": 10},
+    "salted_peanuts": {"name": "Salted Peanuts",                "price": 1.80, "stock": 8},
+    "ice_mountain":   {"name": "Ice Mountain Mineral Water",    "price": 0.90, "stock": 12},
 }
 
 def reduce_stock(name):
@@ -45,11 +42,11 @@ if __name__ == "__main__":
     for key, val in inventory.items():
         print(f"  {val['name']}: {val['stock']} units @ ${val['price']:.2f}")
     
-    print("\nSimulating pickup of coke_can...")
-    reduce_stock("coke_can")
+    print("\nSimulating pickup of pocky...")
+    reduce_stock("pocky")
     
-    print("\nSimulating return of coke_can...")
-    restore_stock("coke_can")
+    print("\nSimulating return of pocky...")
+    restore_stock("pocky")
     
     print("\nLow stock items (threshold 3):")
     print(get_low_stock())
